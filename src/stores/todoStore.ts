@@ -43,8 +43,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             set({
                 groups,
                 tasks,
-                // Set default group if none selected or invalid
-                activeGroupId: get().activeGroupId || (groups.length > 0 ? groups[0].id : null)
+                // Set default group to 'today'
+                activeGroupId: get().activeGroupId || 'today'
             });
         } catch (error) {
             console.error('Failed to fetch data:', error);

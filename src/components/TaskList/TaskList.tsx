@@ -11,20 +11,40 @@ export function TaskList() {
     const [newTaskDescription, setNewTaskDescription] = useState('');
     const [isInputFocused, setIsInputFocused] = useState(false);
 
-    const activeGroup = groups.find(g => g.id === activeGroupId);
-    const groupTasks = tasks.filter(t => t.groupId === activeGroupId);
+    const isTodayView = activeGroupId === 'today';
+
+    // Helper to check if date is today (local time)
+    const isToday = (dateString?: string) => {
+        if (!dateString) return false;
+        const d = new Date(dateString);
+        const today = new Date();
+        return d.getDate() === today.getDate() &&
+            d.getMonth() === today.getMonth() &&
+            d.getFullYear() === today.getFullYear();
+    };
+
+    const activeGroup = isTodayView
+        ? { id: 'today', name: 'Today', icon: 'Calendar', color: 'blue' } as any
+        : groups.find(g => g.id === activeGroupId);
+
+    const groupTasks = isTodayView
+        ? tasks.filter(t => isToday(t.dueDate))
+        : tasks.filter(t => t.groupId === activeGroupId);
 
     // Todo: Sorting logic (completed at bottom, etc.)
 
     const handleAddTask = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (newTaskTitle.trim() && activeGroupId) {
+        const targetGroupId = isTodayView ? groups[0]?.id : activeGroupId;
+
+        if (newTaskTitle.trim() && targetGroupId) {
             addTask({
-                groupId: activeGroupId,
+                groupId: targetGroupId,
                 title: newTaskTitle.trim(),
                 description: newTaskDescription.trim(),
                 reminderEnabled: false,
                 isCompleted: false,
+                dueDate: isTodayView ? new Date().toISOString() : undefined,
                 customFieldValues: []
             });
             setNewTaskTitle('');
@@ -50,7 +70,7 @@ export function TaskList() {
                     <p className="text-muted-foreground mt-1 ml-1">{groupTasks.length} tasks</p>
                 </div>
 
-                {activeGroup.id !== 'default' && (
+                {activeGroup.id !== 'default' && !isTodayView && (
                     <button
                         onClick={() => {
                             const groupToDelete = activeGroup;
@@ -88,70 +108,73 @@ export function TaskList() {
                 )}
             </div>
 
-            <div className="mt-4">
-                <div
-                    className={cn(
-                        "relative group bg-card border border-border rounded-xl shadow-sm transition-all overflow-hidden",
-                        isInputFocused ? "ring-2 ring-primary/20 border-primary" : ""
-                    )}
-                >
-                    <div className="absolute left-4 top-4 text-muted-foreground">
-                        <Plus className="w-5 h-5" />
-                    </div>
-
-                    <input
-                        type="text"
-                        value={newTaskTitle}
-                        onFocus={() => setIsInputFocused(true)}
-                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleAddTask();
-                            }
-                        }}
-                        placeholder="Add a new task..."
-                        className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-lg focus:outline-none focus:ring-0"
-                    />
-
-                    {/* Expandable Description Area */}
-                    {(isInputFocused || newTaskDescription || newTaskTitle) && (
-                        <div className="px-12 pb-3 animate-in fade-in slide-in-from-top-1">
-                            <textarea
-                                value={newTaskDescription}
-                                onChange={(e) => setNewTaskDescription(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && e.metaKey) {
-                                        handleAddTask();
-                                    }
-                                }}
-                                placeholder="Description (optional)"
-                                className="w-full bg-transparent border-none p-0 text-sm text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[40px]"
-                                rows={2}
-                            />
-                            <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-border/50">
-                                <button
-                                    onClick={() => {
-                                        setIsInputFocused(false);
-                                        setNewTaskTitle('');
-                                        setNewTaskDescription('');
-                                    }}
-                                    className="px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted rounded"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => handleAddTask()}
-                                    disabled={!newTaskTitle.trim()}
-                                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
-                                >
-                                    Add Task
-                                </button>
-                            </div>
+            {/* Only show Add Task input if NOT in Today view */}
+            {!isTodayView && (
+                <div className="mt-4">
+                    <div
+                        className={cn(
+                            "relative group bg-card border border-border rounded-xl shadow-sm transition-all overflow-hidden",
+                            isInputFocused ? "ring-2 ring-primary/20 border-primary" : ""
+                        )}
+                    >
+                        <div className="absolute left-4 top-4 text-muted-foreground">
+                            <Plus className="w-5 h-5" />
                         </div>
-                    )}
+
+                        <input
+                            type="text"
+                            value={newTaskTitle}
+                            onFocus={() => setIsInputFocused(true)}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleAddTask();
+                                }
+                            }}
+                            placeholder="Add a new task..."
+                            className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-lg focus:outline-none focus:ring-0"
+                        />
+
+                        {/* Expandable Description Area */}
+                        {(isInputFocused || newTaskDescription || newTaskTitle) && (
+                            <div className="px-12 pb-3 animate-in fade-in slide-in-from-top-1">
+                                <textarea
+                                    value={newTaskDescription}
+                                    onChange={(e) => setNewTaskDescription(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && e.metaKey) {
+                                            handleAddTask();
+                                        }
+                                    }}
+                                    placeholder="Description (optional)"
+                                    className="w-full bg-transparent border-none p-0 text-sm text-muted-foreground focus:outline-none focus:ring-0 resize-none min-h-[40px]"
+                                    rows={2}
+                                />
+                                <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-border/50">
+                                    <button
+                                        onClick={() => {
+                                            setIsInputFocused(false);
+                                            setNewTaskTitle('');
+                                            setNewTaskDescription('');
+                                        }}
+                                        className="px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted rounded"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handleAddTask()}
+                                        disabled={!newTaskTitle.trim()}
+                                        className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
+                                    >
+                                        Add Task
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
