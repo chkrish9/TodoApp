@@ -26,6 +26,9 @@ services:
       VAPID_PUBLIC_KEY: BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
       VAPID_PRIVATE_KEY: Dbpb2DkeZvI9Jj2K3Ujk_PkkxcFl8tL8QniTKlOAIeE
       VAPID_EMAIL: mailto:user@example.com
+      VAPID_PUBLIC_KEY: BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
+      VAPID_PRIVATE_KEY: Dbpb2DkeZvI9Jj2K3Ujk_PkkxcFl8tL8QniTKlOAIeE
+      VAPID_EMAIL: mailto:user@example.com
       PORT: 3001
     depends_on:
       - postgres
@@ -34,6 +37,8 @@ services:
     build: 
         context: .
         dockerfile: Dockerfile
+        args:
+            - VITE_VAPID_PUBLIC_KEY=BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
         args:
             - VITE_VAPID_PUBLIC_KEY=BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
     ports:
