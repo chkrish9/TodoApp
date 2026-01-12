@@ -46,8 +46,8 @@ export const useAuthStore = create<AuthState>()(
                     set({ user: data.user, token: data.accessToken });
                     return true;
                 } catch (error) {
-                    console.error(error);
-                    return false;
+                    console.error('Registration failed:', error);
+                    throw error;
                 }
             },
 

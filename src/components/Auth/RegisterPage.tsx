@@ -42,12 +42,14 @@ export function RegisterPage() {
             return;
         }
 
-        const success = await register(username, password);
-        if (success) {
-            toast.success('Account created!');
-            navigate('/');
-        } else {
-            toast.error('Registration failed. Username might be taken.');
+        try {
+            const success = await register(username, password);
+            if (success) {
+                toast.success('Account created!');
+                navigate('/');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Registration failed');
         }
     };
 
