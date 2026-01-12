@@ -28,12 +28,4 @@ CREATE TABLE IF NOT EXISTS tasks (
   custom_field_values JSONB DEFAULT '[]'::jsonb
 );
 
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  endpoint TEXT NOT NULL,
-  keys_auth TEXT NOT NULL,
-  keys_p256dh TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, endpoint)
-);
+
