@@ -37,10 +37,6 @@ services:
     build: 
         context: .
         dockerfile: Dockerfile
-        args:
-            - VITE_VAPID_PUBLIC_KEY=BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
-        args:
-            - VITE_VAPID_PUBLIC_KEY=BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
     ports:
       - "3000:80"
     environment:

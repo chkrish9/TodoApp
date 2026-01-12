@@ -6,8 +6,6 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-ARG VITE_VAPID_PUBLIC_KEY
-ENV VITE_VAPID_PUBLIC_KEY=$VITE_VAPID_PUBLIC_KEY
 RUN npm run build
 
 FROM nginx:alpine
