@@ -30,10 +30,20 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
+const { body } = require('express-validator');
+const validate = require('../middleware/validate');
+
 // Create task
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, [
+    body('title').trim().notEmpty().withMessage('Title is required').isLength({ max: 100 }).withMessage('Title too long'),
+    body('group_id').optional().isUUID().withMessage('Invalid Group ID'),
+    body('groupId').optional().isUUID().withMessage('Invalid Group ID'),
+    validate
+], async (req, res) => {
     try {
         const { group_id, title, description, is_completed, reminder_enabled, due_date, custom_field_values } = req.body;
+        console.log(`[Tasks] Creating task "${title}" for user ${req.user.username}`);
+
         // Map camelCase if sent from frontend, or snake_case if we align. 
         // The previous todoStore sent "task" object which has camelCase keys usually. 
         // Let's support camelCase input for better DX.
@@ -79,6 +89,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
+        console.log(`[Tasks] Updating task ${id} with:`, updates);
 
         // Check ownership via join
         const check = await pool.query(
@@ -141,6 +152,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`[Tasks] Deleting task ${id} for user ${req.user.username}`);
         // Check ownership
         const check = await pool.query(
             `SELECT t.id FROM tasks t JOIN groups g ON t.group_id = g.id WHERE t.id = $1 AND g.user_id = $2`,

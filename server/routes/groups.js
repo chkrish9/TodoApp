@@ -20,6 +20,7 @@ router.get('/', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { name, icon, color } = req.body;
+        console.log(`[Groups] Creating group "${name}" for user ${req.user.username}`);
         const result = await pool.query(
             'INSERT INTO groups (user_id, name, icon, color) VALUES ($1, $2, $3, $4) RETURNING *',
             [req.user.id, name, icon || 'List', color || 'blue']
@@ -34,6 +35,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`[Groups] Deleting group ${id} for user ${req.user.username}`);
         // Check ownership
         const check = await pool.query('SELECT * FROM groups WHERE id = $1 AND user_id = $2', [id, req.user.id]);
         if (check.rows.length === 0) {

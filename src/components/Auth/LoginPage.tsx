@@ -4,21 +4,50 @@ import { useNavigate, Link } from 'react-router-dom';
 import { config } from '../../config';
 import { Lock, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
+import { cn } from '../../lib/utils';
+
+const loginSchema = z.object({
+    username: z.string().min(1, 'Username is required'),
+    password: z.string().min(1, 'Password is required'),
+});
 
 export function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const login = useAuthStore(state => state.login);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = await login(username, password);
-        if (success) {
-            toast.success('Welcome back!');
-            navigate('/');
-        } else {
-            toast.error('Invalid credentials');
+        setErrors({});
+
+        // Zod Validation
+        const result = loginSchema.safeParse({ username, password });
+        if (!result.success) {
+            const formattedErrors: { [key: string]: string } = {};
+            result.error.issues.forEach(issue => {
+                if (issue.path[0]) {
+                    formattedErrors[issue.path[0] as string] = issue.message;
+                }
+            });
+            setErrors(formattedErrors);
+            return;
+        }
+
+        try {
+            const success = await login(username, password);
+            if (success) {
+                toast.success('Welcome back!');
+                navigate('/');
+            } else {
+                // The store/client logs the error, but we show a generic one here if logic false
+                // ideally `login` should throw or return the error message
+                toast.error('Invalid username or password');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Login failed');
         }
     };
 
@@ -40,8 +69,12 @@ export function LoginPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full rounded-md border border-input bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className={cn(
+                                    "w-full rounded-md border bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+                                    errors.username ? "border-red-500 focus:ring-red-500" : "border-input"
+                                )}
                             />
+                            {errors.username && <p className="text-xs text-red-500 mt-1 ml-1">{errors.username}</p>}
                         </div>
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -51,8 +84,12 @@ export function LoginPage() {
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-md border border-input bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className={cn(
+                                    "w-full rounded-md border bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+                                    errors.password ? "border-red-500 focus:ring-red-500" : "border-input"
+                                )}
                             />
+                            {errors.password && <p className="text-xs text-red-500 mt-1 ml-1">{errors.password}</p>}
                         </div>
                     </div>
 

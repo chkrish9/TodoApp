@@ -11,6 +11,12 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Request logger
+app.use((req, res, next) => {
+    console.log(`[Request] ${req.method} ${req.url}`, req.body && Object.keys(req.body).length > 0 ? req.body : '');
+    next();
+});
+
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/groups', require('./routes/groups'));

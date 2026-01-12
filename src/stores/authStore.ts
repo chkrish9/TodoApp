@@ -24,20 +24,24 @@ export const useAuthStore = create<AuthState>()(
             token: null,
 
             login: async (username, password) => {
+                console.log('[Store] Logging in:', username);
                 try {
                     const data = await apiClient.post('/auth/login', { username, password });
                     set({ user: data.user, token: data.accessToken });
                     return true;
                 } catch (error) {
-                    console.error(error);
-                    return false;
+                    console.error('Login action failed:', error);
+                    // Re-throw so component can show specific message
+                    throw error;
                 }
             },
 
             register: async (username, password) => {
+                console.log('[Store] Registering user:', username);
                 try {
                     await apiClient.post('/auth/register', { username, password });
                     // Auto login after register
+                    console.log('[Store] Auto-logging in after registration');
                     const data = await apiClient.post('/auth/login', { username, password });
                     set({ user: data.user, token: data.accessToken });
                     return true;
@@ -47,9 +51,13 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            logout: () => set({ user: null, token: null }),
+            logout: () => {
+                console.log('[Store] Logging out');
+                set({ user: null, token: null });
+            },
 
             checkAuth: async () => {
+                console.log('[Store] Checking auth state');
                 try {
                     const user = await apiClient.get('/auth/me');
                     set({ user });

@@ -5,10 +5,14 @@ import { config } from '../../config';
 import { Lock, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { cn } from '../../lib/utils';
+import { registerSchema } from '../../schemas/validation';
+
 export function RegisterPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const register = useAuthStore(state => state.register);
     const navigate = useNavigate();
 
@@ -23,9 +27,18 @@ export function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setErrors({});
 
-        if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
+        // Zod Validation
+        const result = registerSchema.safeParse({ username, password, confirmPassword });
+        if (!result.success) {
+            const formattedErrors: { [key: string]: string } = {};
+            result.error.issues.forEach(issue => {
+                if (issue.path[0]) {
+                    formattedErrors[issue.path[0] as string] = issue.message;
+                }
+            });
+            setErrors(formattedErrors);
             return;
         }
 
@@ -34,7 +47,7 @@ export function RegisterPage() {
             toast.success('Account created!');
             navigate('/');
         } else {
-            toast.error('Username already exists');
+            toast.error('Registration failed. Username might be taken.');
         }
     };
 
@@ -60,8 +73,12 @@ export function RegisterPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full rounded-md border border-input bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className={cn(
+                                    "w-full rounded-md border bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+                                    errors.username ? "border-red-500 focus:ring-red-500" : "border-input"
+                                )}
                             />
+                            {errors.username && <p className="text-xs text-red-500 mt-1 ml-1">{errors.username}</p>}
                         </div>
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -71,8 +88,12 @@ export function RegisterPage() {
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-md border border-input bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className={cn(
+                                    "w-full rounded-md border bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+                                    errors.password ? "border-red-500 focus:ring-red-500" : "border-input"
+                                )}
                             />
+                            {errors.password && <p className="text-xs text-red-500 mt-1 ml-1">{errors.password}</p>}
                         </div>
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -82,8 +103,12 @@ export function RegisterPage() {
                                 placeholder="Confirm Password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full rounded-md border border-input bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className={cn(
+                                    "w-full rounded-md border bg-transparent px-10 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+                                    errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-input"
+                                )}
                             />
+                            {errors.confirmPassword && <p className="text-xs text-red-500 mt-1 ml-1">{errors.confirmPassword}</p>}
                         </div>
                     </div>
 

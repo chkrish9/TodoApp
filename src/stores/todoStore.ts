@@ -52,6 +52,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     addTask: async (task) => {
+        console.log('[Store] Adding task:', task);
         try {
             const newTask = await apiClient.post('/tasks', task);
             set((state) => ({
@@ -63,6 +64,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     updateTask: async (id, updates) => {
+        console.log('[Store] Updating task:', id, updates);
         try {
             const updatedTask = await apiClient.patch(`/tasks/${id}`, updates);
             set((state) => ({
@@ -74,6 +76,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     deleteTask: async (id) => {
+        console.log('[Store] Deleting task:', id);
         try {
             await apiClient.delete(`/tasks/${id}`);
             set((state) => ({
@@ -86,6 +89,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     toggleTaskCompletion: async (id) => {
+        console.log('[Store] Toggling task completion:', id);
         const task = get().tasks.find(t => t.id === id);
         if (!task) return;
 
@@ -93,24 +97,9 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             const updatedTask = await apiClient.patch(`/tasks/${id}`, {
                 is_completed: !task.isCompleted
             });
-            // Update mapping backend snake_case to frontend camelCase if needed, 
-            // but assumes API returns same shape or we handle it.
-            // Actually API returns snake_case columns. We need to handle mapping.
-            // Wait, for simplicity, I'll update the frontend interfaces to match DB or map here.
-            // Let's assume the API returns proper JSON matching frontend for now, or I'll fix types.
-            // To be safe, I'll map API response to Frontend Task type.
-
-            // Actually, let's just make the backend return camelCase or update frontend types.
-            // Updating Frontend Types to match DB columns (snake_case) is painful.
-            // Better to have API return camelCase.
-            // I'll stick to 'any' cast or simple object spread for now and fix backend to return camelCase later if needed.
-            // But wait, the previous implementation used `isCompleted`. The DB uses `is_completed`.
-            // I should update the backend to return camelCase aliases.
-
-            // For now, I will proceed with this implementation and fix the backend response in the next step to ensure compatibility.
-
+            // Backend returns camelCase keys now
             set((state) => ({
-                tasks: state.tasks.map((t) => (t.id === id ? { ...t, isCompleted: updatedTask.is_completed } : t))
+                tasks: state.tasks.map((t) => (t.id === id ? { ...t, isCompleted: updatedTask.isCompleted } : t))
             }));
         } catch (error) {
             console.error('Failed to toggle task:', error);
@@ -118,6 +107,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     addGroup: async (group) => {
+        console.log('[Store] Adding group:', group);
         try {
             const newGroup = await apiClient.post('/groups', group);
             set((state) => ({
@@ -129,6 +119,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     deleteGroup: async (id) => {
+        console.log('[Store] Deleting group:', id);
         try {
             await apiClient.delete(`/groups/${id}`);
             set((state) => ({

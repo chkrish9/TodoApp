@@ -17,6 +17,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -26,7 +27,6 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <TaskList />
-                <Toaster />
               </Layout>
             </ProtectedRoute>
           }
