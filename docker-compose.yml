@@ -16,7 +16,7 @@ services:
   backend:
     build: ./server
     ports:
-      - "3001:3001"
+      - "0.0.0.0:3001:3001"
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: postgres
@@ -35,7 +35,7 @@ services:
         context: .
         dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "0.0.0.0:3000:80"
     environment:
         - VITE_VAPID_PUBLIC_KEY=BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
     depends_on:
