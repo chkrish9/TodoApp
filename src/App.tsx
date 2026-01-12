@@ -14,7 +14,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { useThemeStore } from './stores/themeStore';
+import { useEffect } from 'react';
+
 function App() {
+  const { theme, setTheme } = useThemeStore();
+
+  useEffect(() => {
+    setTheme(theme);
+  }, [theme, setTheme]);
+
   return (
     <BrowserRouter>
       <Toaster />

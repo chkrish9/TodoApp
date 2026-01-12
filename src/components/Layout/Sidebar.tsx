@@ -10,6 +10,22 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/authStore';
+import { useThemeStore } from '../../stores/themeStore';
+import { Moon, Sun } from 'lucide-react';
+
+function ThemeToggle() {
+    const { theme, setTheme } = useThemeStore();
+
+    return (
+        <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            title="Toggle theme"
+        >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+    );
+}
 
 interface SidebarProps {
     onItemClick?: () => void;
@@ -141,13 +157,16 @@ export function Sidebar({ onItemClick }: SidebarProps) {
                     <div className="text-sm font-medium">
                         {user?.username}
                     </div>
-                    <button
-                        onClick={logout}
-                        className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                        title="Sign out"
-                    >
-                        <LogOut className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <ThemeToggle />
+                        <button
+                            onClick={logout}
+                            className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            title="Sign out"
+                        >
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
                 <div className="text-xs text-muted-foreground">
                     v1.0.0
