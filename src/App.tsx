@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { LoginPage } from './components/Auth/LoginPage';
 import { RegisterPage } from './components/Auth/RegisterPage';
 import { useAuthStore } from './stores/authStore';
+import { InstallPrompt } from './components/PWA/InstallPrompt';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -27,6 +28,7 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster />
+      <InstallPrompt />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
