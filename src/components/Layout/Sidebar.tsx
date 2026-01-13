@@ -11,7 +11,9 @@ import {
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Bell } from 'lucide-react';
+import { urlBase64ToUint8Array } from '../../lib/utils';
+import { apiClient } from '../../api/client';
 
 function ThemeToggle() {
     const { theme, setTheme } = useThemeStore();
@@ -24,6 +26,83 @@ function ThemeToggle() {
         >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
+    );
+}
+
+function PushToggle() {
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const subscribe = async () => {
+        setLoading(true);
+        try {
+            // Fetch public key from backend
+            const keyResponse = await apiClient.get('/notifications/vapid-key');
+            if (!keyResponse.publicKey) throw new Error('No public key returned');
+
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(keyResponse.publicKey)
+            });
+
+            await apiClient.post('/notifications/subscribe', subscription);
+            setIsSubscribed(true);
+            toast.success('Daily reminders enabled!');
+        } catch (error) {
+            console.error('Failed to subscribe:', error);
+            toast.error('Failed to enable notifications');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const sendTest = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await apiClient.post('/notifications/test', {});
+            toast.success('Test notification sent!');
+        } catch (error) {
+            toast.error('Failed to send test');
+        }
+    };
+
+    // Check initial status
+    React.useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.pushManager.getSubscription().then(sub => {
+                    if (sub) setIsSubscribed(true);
+                });
+            });
+        }
+    }, []);
+
+    if (Notification.permission === 'denied') return null;
+
+    return (
+        <div className="flex items-center gap-1">
+            <button
+                onClick={subscribe}
+                disabled={isSubscribed || loading}
+                className={cn(
+                    "p-2 hover:bg-muted rounded-md transition-colors",
+                    isSubscribed ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+                title={isSubscribed ? "Notifications enabled" : "Enable daily reminders"}
+            >
+                <Bell className="w-4 h-4" />
+            </button>
+            {isSubscribed && (
+                <button
+                    onClick={sendTest}
+                    className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                    title="Send Test Notification"
+                >
+                    <span className="text-xs font-bold">Try</span>
+                </button>
+            )}
+        </div>
     );
 }
 
@@ -160,6 +239,7 @@ export function Sidebar({ onItemClick }: SidebarProps) {
                         {user?.username}
                     </div>
                     <div className="flex items-center gap-1">
+                        <PushToggle />
                         <ThemeToggle />
                         <button
                             onClick={logout}

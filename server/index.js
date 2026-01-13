@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { pool } = require('./db');
+const vapid = require('./lib/vapid');
 
 dotenv.config();
 
@@ -17,10 +18,97 @@ app.use((req, res, next) => {
     next();
 });
 
+// Helper to send push
+async function sendPush(subscription) {
+    const endpointUrl = new URL(subscription.endpoint);
+    const audience = `${endpointUrl.protocol}//${endpointUrl.hostname}`;
+
+    const vapidHeader = vapid.generateVapidHeader(
+        audience,
+        process.env.VAPID_EMAIL || 'mailto:admin@example.com',
+        process.env.VAPID_PRIVATE_KEY
+    );
+
+    if (!vapidHeader) {
+        console.error('Failed to generate VAPID header');
+        return;
+    }
+
+    try {
+        // Send "Tickle" (empty body)
+        const response = await fetch(subscription.endpoint, {
+            method: 'POST',
+            headers: {
+                'Authorization': vapidHeader,
+                'TTL': '60',
+            }
+        });
+
+        if (response.status === 410) {
+            return 'gone';
+        }
+        if (!response.ok) {
+            console.error(`Push failed: ${response.status} ${await response.text()}`);
+        }
+    } catch (err) {
+        console.error('Push error', err);
+    }
+}
+
+// Daily Timer (Check every minute)
+setInterval(async () => {
+    const now = new Date();
+    // Run at 09:00 AM server time
+    if (now.getHours() === 9 && now.getMinutes() === 0) {
+        console.log('[Timer] Running daily task reminder...');
+        const client = await pool.connect();
+
+        try {
+            // Get users with active subscriptions
+            const { rows: users } = await client.query('SELECT DISTINCT user_id FROM subscriptions');
+
+            for (const user of users) {
+                const userId = user.user_id;
+
+                // Check if user has incomplete tasks due today
+                const { rows: tasks } = await client.query(
+                    `SELECT count(*) as count FROM tasks 
+                      WHERE group_id IN (SELECT id FROM groups WHERE user_id = $1)
+                      AND is_completed = false
+                      AND due_date::date = CURRENT_DATE`,
+                    [userId]
+                );
+
+                if (parseInt(tasks[0].count) > 0) {
+                    // Get user subscriptions
+                    const { rows: subs } = await client.query(
+                        'SELECT * FROM subscriptions WHERE user_id = $1',
+                        [userId]
+                    );
+
+                    for (const sub of subs) {
+                        const result = await sendPush(sub);
+                        if (result === 'gone') {
+                            await client.query('DELETE FROM subscriptions WHERE endpoint = $1', [sub.endpoint]);
+                            console.log('Removed stale subscription');
+                        }
+                    }
+                    console.log(`Sent reminders to user ${userId}`);
+                }
+            }
+        } catch (e) {
+            console.error('[Timer] Job failed', e);
+        } finally {
+            client.release();
+        }
+    }
+}, 60000); // Check every minute
+
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/groups', require('./routes/groups'));
 app.use('/api/v1/tasks', require('./routes/tasks'));
+app.use('/api/v1/notifications', require('./routes/notifications'));
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
