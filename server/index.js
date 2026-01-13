@@ -57,62 +57,58 @@ async function sendPush(subscription, payload) {
     }
 }
 
-// Daily Timer (Check every minute)
+// Scheduled Timer (Check every 10 minutes)
 setInterval(async () => {
-    const now = new Date();
-    // Run at 09:00 AM server time
-    if (now.getHours() === 9 && now.getMinutes() === 0) {
-        console.log('[Timer] Running daily task reminder...');
-        const client = await pool.connect();
+    console.log('[Timer] Running scheduled task reminder...');
+    const client = await pool.connect();
 
-        try {
-            // Get users with active subscriptions
-            const { rows: users } = await client.query('SELECT DISTINCT user_id FROM subscriptions');
+    try {
+        // Get users with active subscriptions
+        const { rows: users } = await client.query('SELECT DISTINCT user_id FROM subscriptions');
 
-            for (const user of users) {
-                const userId = user.user_id;
+        for (const user of users) {
+            const userId = user.user_id;
 
-                // Check if user has incomplete tasks due today
-                const { rows: tasks } = await client.query(
-                    `SELECT count(*) as count FROM tasks 
-                      WHERE group_id IN (SELECT id FROM groups WHERE user_id = $1)
-                      AND is_completed = false
-                      AND due_date::date = CURRENT_DATE`,
+            // Check if user has incomplete tasks due today
+            const { rows: tasks } = await client.query(
+                `SELECT count(*) as count FROM tasks 
+                    WHERE group_id IN (SELECT id FROM groups WHERE user_id = $1)
+                    AND is_completed = false
+                    AND due_date::date = CURRENT_DATE`,
+                [userId]
+            );
+
+            const taskCount = parseInt(tasks[0].count);
+
+            if (taskCount > 0) {
+                // Get user subscriptions
+                const { rows: subs } = await client.query(
+                    'SELECT * FROM subscriptions WHERE user_id = $1',
                     [userId]
                 );
 
-                const taskCount = parseInt(tasks[0].count);
+                const payload = JSON.stringify({
+                    title: 'Task Reminder',
+                    body: `You still have ${taskCount} task${taskCount === 1 ? '' : 's'} due today!`,
+                    url: '/'
+                });
 
-                if (taskCount > 0) {
-                    // Get user subscriptions
-                    const { rows: subs } = await client.query(
-                        'SELECT * FROM subscriptions WHERE user_id = $1',
-                        [userId]
-                    );
-
-                    const payload = JSON.stringify({
-                        title: 'Daily Focus',
-                        body: `You have ${taskCount} task${taskCount === 1 ? '' : 's'} due today.`,
-                        url: '/'
-                    });
-
-                    for (const sub of subs) {
-                        const result = await sendPush(sub, payload);
-                        if (result === 'gone') {
-                            await client.query('DELETE FROM subscriptions WHERE endpoint = $1', [sub.endpoint]);
-                            console.log('Removed stale subscription');
-                        }
+                for (const sub of subs) {
+                    const result = await sendPush(sub, payload);
+                    if (result === 'gone') {
+                        await client.query('DELETE FROM subscriptions WHERE endpoint = $1', [sub.endpoint]);
+                        console.log('Removed stale subscription');
                     }
-                    console.log(`Sent reminders to user ${userId} (Count: ${taskCount})`);
                 }
+                console.log(`Sent reminders to user ${userId} (Count: ${taskCount})`);
             }
-        } catch (e) {
-            console.error('[Timer] Job failed', e);
-        } finally {
-            client.release();
         }
+    } catch (e) {
+        console.error('[Timer] Job failed', e);
+    } finally {
+        client.release();
     }
-}, 60000); // Check every minute
+}, 600000); // Check every 10 minutes
 
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
