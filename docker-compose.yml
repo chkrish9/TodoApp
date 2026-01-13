@@ -36,6 +36,9 @@ services:
         dockerfile: Dockerfile
     ports:
       - "0.0.0.0:3000:80"
+      - "0.0.0.0:3002:443"
+    volumes:
+      - ./certs:/etc/nginx/certs
     depends_on:
       - backend
 
