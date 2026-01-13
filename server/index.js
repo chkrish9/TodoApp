@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 });
 
 // Helper to send push
-async function sendPush(subscription) {
+async function sendPush(subscription, payload) {
     const endpointUrl = new URL(subscription.endpoint);
     const audience = `${endpointUrl.protocol}//${endpointUrl.hostname}`;
 
@@ -35,13 +35,15 @@ async function sendPush(subscription) {
     }
 
     try {
-        // Send "Tickle" (empty body)
+        // Send Notification Payload
         const response = await fetch(subscription.endpoint, {
             method: 'POST',
             headers: {
                 'Authorization': vapidHeader,
                 'TTL': '60',
-            }
+                'Content-Type': 'application/json'
+            },
+            body: payload
         });
 
         if (response.status === 410) {
@@ -79,21 +81,29 @@ setInterval(async () => {
                     [userId]
                 );
 
-                if (parseInt(tasks[0].count) > 0) {
+                const taskCount = parseInt(tasks[0].count);
+
+                if (taskCount > 0) {
                     // Get user subscriptions
                     const { rows: subs } = await client.query(
                         'SELECT * FROM subscriptions WHERE user_id = $1',
                         [userId]
                     );
 
+                    const payload = JSON.stringify({
+                        title: 'Daily Focus',
+                        body: `You have ${taskCount} task${taskCount === 1 ? '' : 's'} due today.`,
+                        url: '/'
+                    });
+
                     for (const sub of subs) {
-                        const result = await sendPush(sub);
+                        const result = await sendPush(sub, payload);
                         if (result === 'gone') {
                             await client.query('DELETE FROM subscriptions WHERE endpoint = $1', [sub.endpoint]);
                             console.log('Removed stale subscription');
                         }
                     }
-                    console.log(`Sent reminders to user ${userId}`);
+                    console.log(`Sent reminders to user ${userId} (Count: ${taskCount})`);
                 }
             }
         } catch (e) {

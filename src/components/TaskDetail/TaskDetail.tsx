@@ -1,5 +1,5 @@
 import { useTodoStore } from '../../stores/todoStore';
-import { X, Bell, Trash } from 'lucide-react';
+import { X, Trash } from 'lucide-react';
 import type { Task, CustomField } from '../../types/todo';
 import { CustomFieldsRenderer } from './CustomFieldsRenderer';
 import { CustomFieldManager } from './CustomFieldManager';
@@ -62,18 +62,7 @@ export function TaskDetail() {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between bg-card border border-border rounded-md px-3 py-2">
-                        <div className="flex items-center gap-2 text-sm">
-                            <Bell className="w-4 h-4 text-primary" />
-                            <span>Reminders</span>
-                        </div>
-                        <input
-                            type="checkbox"
-                            checked={task.reminderEnabled}
-                            onChange={(e) => handleUpdate({ reminderEnabled: e.target.checked })}
-                            className="accent-primary w-4 h-4"
-                        />
-                    </div>
+
                 </div>
 
                 {/* Description */}

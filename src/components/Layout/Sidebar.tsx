@@ -36,11 +36,21 @@ function PushToggle() {
     const subscribe = async () => {
         setLoading(true);
         try {
-            // Fetch public key from backend
-            const keyResponse = await apiClient.get('/notifications/vapid-key');
-            if (!keyResponse.publicKey) throw new Error('No public key returned');
+            if (!('serviceWorker' in navigator)) {
+                throw new Error('Service Worker not supported');
+            }
 
             const registration = await navigator.serviceWorker.ready;
+
+            // Check permission
+            if (Notification.permission === 'denied') {
+                throw new Error('Notifications blocked. Please enable them in site settings.');
+            }
+
+            // Fetch public key from backend
+            const keyResponse = await apiClient.get('/notifications/vapid-key');
+            if (!keyResponse.publicKey) throw new Error('No public key returned from server');
+
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(keyResponse.publicKey)
@@ -49,23 +59,16 @@ function PushToggle() {
             await apiClient.post('/notifications/subscribe', subscription);
             setIsSubscribed(true);
             toast.success('Daily reminders enabled!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to subscribe:', error);
-            toast.error('Failed to enable notifications');
+            // Show detailed error to user
+            toast.error(error.message || 'Failed to enable notifications');
         } finally {
             setLoading(false);
         }
     };
 
-    const sendTest = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        try {
-            await apiClient.post('/notifications/test', {});
-            toast.success('Test notification sent!');
-        } catch (error) {
-            toast.error('Failed to send test');
-        }
-    };
+
 
     // Check initial status
     React.useEffect(() => {
@@ -93,15 +96,7 @@ function PushToggle() {
             >
                 <Bell className="w-4 h-4" />
             </button>
-            {isSubscribed && (
-                <button
-                    onClick={sendTest}
-                    className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    title="Send Test Notification"
-                >
-                    <span className="text-xs font-bold">Try</span>
-                </button>
-            )}
+
         </div>
     );
 }
