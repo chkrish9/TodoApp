@@ -57,7 +57,16 @@ export function TaskDetail() {
                         <input
                             type="date"
                             value={task.dueDate ? task.dueDate.split('T')[0] : ''}
-                            onChange={(e) => handleUpdate({ dueDate: e.target.value ? new Date(e.target.value).toISOString() : undefined })}
+                            onChange={(e) => {
+                                if (!e.target.value) {
+                                    handleUpdate({ dueDate: undefined });
+                                    return;
+                                }
+                                // Create a date object from the input value (YYYY-MM-DD)
+                                // We append T00:00:00 to force local time interpretation
+                                const date = new Date(e.target.value + 'T00:00:00');
+                                handleUpdate({ dueDate: date.toISOString() });
+                            }}
                             className="flex-1 bg-card border border-border rounded-md px-3 py-2 text-sm"
                         />
                     </div>

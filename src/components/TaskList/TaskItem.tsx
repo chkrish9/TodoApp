@@ -50,7 +50,7 @@ export function TaskItem({ task, onClick }: TaskItemProps) {
                         task.isCompleted ? "text-muted-foreground" : "text-primary"
                     )}>
                         <Calendar className="w-3 h-3" />
-                        <span>{format(new Date(task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T12:00:00`), 'MMM d')}</span>
+                        <span>{format(new Date(task.dueDate), 'MMM d')}</span>
                     </div>
                 )}
 
