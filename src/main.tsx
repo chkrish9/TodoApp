@@ -7,9 +7,8 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    if (confirm('New content available. Reload?')) {
-      updateSW(true)
-    }
+    // Automatically reload when a new service worker is available
+    updateSW(true)
   },
 })
 
