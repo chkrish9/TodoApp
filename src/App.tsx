@@ -6,6 +6,7 @@ import { LoginPage } from './components/Auth/LoginPage';
 import { RegisterPage } from './components/Auth/RegisterPage';
 import { useAuthStore } from './stores/authStore';
 import { InstallPrompt } from './components/PWA/InstallPrompt';
+import { SettingsPage } from './components/Settings/SettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -38,6 +39,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <TaskList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <SettingsPage />
               </Layout>
             </ProtectedRoute>
           }

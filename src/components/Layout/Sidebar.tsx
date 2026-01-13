@@ -11,9 +11,10 @@ import {
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
-import { Moon, Sun, Bell } from 'lucide-react';
+import { Moon, Sun, Bell, Settings } from 'lucide-react';
 import { urlBase64ToUint8Array } from '../../lib/utils';
 import { apiClient } from '../../api/client';
+import { useNavigate } from 'react-router-dom';
 
 function ThemeToggle() {
     const { theme, setTheme } = useThemeStore();
@@ -110,6 +111,7 @@ interface SidebarProps {
 export function Sidebar({ onItemClick }: SidebarProps) {
     const { groups, activeGroupId, setActiveGroup, addGroup, deleteGroup } = useTodoStore();
     const { user, logout } = useAuthStore();
+    const navigate = useNavigate();
     const [isAddingString, setIsAddingString] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
 
@@ -236,6 +238,13 @@ export function Sidebar({ onItemClick }: SidebarProps) {
                     <div className="flex items-center gap-1">
                         <PushToggle />
                         <ThemeToggle />
+                        <button
+                            onClick={() => navigate('/settings')}
+                            className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            title="Settings"
+                        >
+                            <Settings className="w-4 h-4" />
+                        </button>
                         <button
                             onClick={logout}
                             className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
