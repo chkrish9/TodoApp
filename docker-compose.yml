@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: midnight_ride
+      TZ: America/Chicagonight_ride
     ports:
       - "5432:5432"
     volumes:
@@ -26,6 +27,7 @@ services:
       VAPID_PUBLIC_KEY: BMYZhUBcK63nwNekE9VmHMLErsMxgkxGQWlzJqS_T--lsVOkbk6JT9D6RVGhgUBFTP_SQqo1molh3_e3zYPGa50
       VAPID_PRIVATE_KEY: Dbpb2DkeZvI9Jj2K3Ujk_PkkxcFl8tL8QniTKlOAIeE
       VAPID_EMAIL: mailto:user@example.com
+      TZ: America/ChicagoSQqo1molh3_e3zYPGa50
       PORT: 3001
     depends_on:
       - postgres

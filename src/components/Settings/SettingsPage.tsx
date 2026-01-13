@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '../../api/client';
-import { Lock, Save } from 'lucide-react';
+import { Lock, Save, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function SettingsPage() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,9 +44,17 @@ export function SettingsPage() {
     return (
         <div className="flex-1 h-full overflow-y-auto bg-background p-6 md:p-10">
             <div className="max-w-2xl mx-auto space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
-                    <p className="text-muted-foreground mt-2">Manage your account settings and preferences.</p>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="p-2 hover:bg-muted rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
+                        <p className="text-muted-foreground mt-1">Manage your account settings and preferences.</p>
+                    </div>
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-6 shadow-sm">

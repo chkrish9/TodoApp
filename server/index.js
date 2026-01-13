@@ -58,7 +58,7 @@ async function sendPush(subscription, payload) {
 }
 
 // Scheduled Timer (Check every 10 minutes)
-setInterval(async () => {
+async function checkReminders() {
     console.log('[Timer] Running scheduled task reminder...');
     const client = await pool.connect();
 
@@ -70,6 +70,7 @@ setInterval(async () => {
             const userId = user.user_id;
 
             // Check if user has incomplete tasks due today
+            // Note: Docker TZ is set to America/Chicago, so CURRENT_DATE should be correct local day
             const { rows: tasks } = await client.query(
                 `SELECT count(*) as count FROM tasks 
                     WHERE group_id IN (SELECT id FROM groups WHERE user_id = $1)
@@ -108,7 +109,12 @@ setInterval(async () => {
     } finally {
         client.release();
     }
-}, 600000); // Check every 10 minutes
+}
+
+// Run immediately on startup
+setTimeout(checkReminders, 5000); // Wait 5s for DB connection
+// Then every 10 mins
+setInterval(checkReminders, 600000);
 
 // Routes
 app.use('/api/v1/auth', require('./routes/auth'));
